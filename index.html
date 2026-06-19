@@ -31,6 +31,34 @@
   .filter-btn.active { background:#fef3c7; border-color:#c9a227; color:#7c5e10; font-weight:bold; }
   .county-status { position:absolute; bottom:28px; left:14px; font-size:0.7rem; color:#5a6480; background:rgba(245,242,236,0.85); padding:4px 8px; border-radius:4px; font-family:sans-serif; z-index:1000; }
 .leaflet-popup-close-button { display: none !important; }
+  .search-box {
+    display:flex; align-items:center; gap:8px;
+    background:#fff; border:1px solid #c8bc9a; border-radius:6px;
+    padding:5px 10px; box-shadow:0 1px 4px rgba(0,0,0,0.08);
+  }
+  .search-box input {
+    border:none; outline:none; font-family:'Georgia',serif;
+    font-size:0.82rem; color:#1a1a2e; background:transparent; width:220px;
+  }
+  .search-box input::placeholder { color:#9ca3af; }
+  .search-box svg { flex-shrink:0; opacity:0.4; }
+  .search-clear { cursor:pointer; font-size:16px; color:#9ca3af; display:none; line-height:1; }
+  .search-clear:hover { color:#374151; }
+  .search-results {
+    position:absolute; top:58px; left:50%; transform:translateX(-50%);
+    background:#fff; border:1px solid #c8bc9a; border-radius:6px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.12); z-index:2000;
+    max-height:280px; overflow-y:auto; min-width:360px; max-width:500px;
+    display:none;
+  }
+  .search-result-item {
+    padding:8px 14px; cursor:pointer; font-size:0.8rem;
+    color:#1a1a2e; font-family:sans-serif; border-bottom:1px solid #f3f4f6;
+  }
+  .search-result-item:last-child { border-bottom:none; }
+  .search-result-item:hover { background:#fef3c7; }
+  .search-result-srn { font-weight:bold; color:#8b6914; margin-right:6px; }
+  .search-no-results { padding:10px 14px; font-size:0.8rem; color:#9ca3af; font-family:sans-serif; }
 </style>
 </head>
 <body>
@@ -39,6 +67,12 @@
     <img src="data:image/png;base64,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" alt="Crown VII" style="height:44px;width:auto;"/>
     <span style="color:#5a6480;font-size:0.88rem;letter-spacing:0.04em;font-family:'Georgia',serif">Mineral Interest Portfolio</span>
   </div>
+  <div class="search-box">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="search-input" placeholder="Search SRN or asset name…" autocomplete="off"/>
+    <span class="search-clear" id="search-clear">&times;</span>
+  </div>
+  <div class="search-results" id="search-results"></div>
   <div class="stats">
     <div class="stat-item"><div class="stat-val">851</div><div class="stat-lbl">Parcels</div></div>
     <div class="stat-item"><div class="stat-val" id="stat-visible">851</div><div class="stat-lbl">Visible</div></div>
@@ -205,6 +239,75 @@ function filterType(btn,type){
     if(bounds.length){const combined=bounds.reduce((a,b)=>a.extend(b),L.latLngBounds(bounds[0]));map.fitBounds(combined,{padding:[50,50]});}
   } else {map.fitBounds(geoLayer.getBounds(),{padding:[30,30]});}
 }
+
+// ── Search ──────────────────────────────────────────────────────────────────
+var searchInput  = document.getElementById('search-input');
+var searchClear  = document.getElementById('search-clear');
+var searchResults = document.getElementById('search-results');
+
+searchInput.addEventListener('input', function() {
+  var q = this.value.trim().toLowerCase();
+  searchClear.style.display = q ? 'block' : 'none';
+  if (q.length < 2) { searchResults.style.display='none'; return; }
+  var matches = [];
+  geoLayer.eachLayer(function(layer) {
+    var p = layer.feature.properties;
+    var srn = String(p.SRN||'').toLowerCase();
+    var asset = String(p.Asset||'').toLowerCase();
+    if (srn.indexOf(q) !== -1 || asset.indexOf(q) !== -1) {
+      matches.push({ layer:layer, p:p });
+    }
+  });
+  if (matches.length === 0) {
+    searchResults.innerHTML = '<div class="search-no-results">No results found</div>';
+  } else {
+    searchResults.innerHTML = matches.slice(0,20).map(function(m,i) {
+      return '<div class="search-result-item" data-idx="'+i+'">'
+        +'<span class="search-result-srn">SRN '+m.p.SRN+'</span>'
+        +(m.p.Asset||'')
+        +'</div>';
+    }).join('');
+    searchResults.querySelectorAll('.search-result-item').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var idx = +this.getAttribute('data-idx');
+        var m = matches[idx];
+        var bounds = m.layer.getBounds();
+        map.fitBounds(bounds, { maxZoom:14, padding:[60,60] });
+        // Build popup at center of feature
+        var center = bounds.getCenter();
+        var p = m.p;
+        var nma=(p.COP_VII_NM!=null)?(+p.COP_VII_NM).toFixed(2):'—';
+        var nra=(p.COP_VII_NR!=null)?(+p.COP_VII_NR).toFixed(2):'—';
+        L.popup({maxWidth:340})
+          .setLatLng(center)
+          .setContent(buildPopupHTML([m.layer.feature], 0))
+          .openOn(map);
+        setTimeout(function(){
+          var el2=map._popup&&map._popup.getElement();
+          if(!el2)return;
+          var c=el2.querySelector('.popup-close');
+          if(c)c.onclick=function(){map.closePopup();};
+          var wrap=el2.querySelector('.leaflet-popup-content-wrapper');
+          if(wrap)L.DomEvent.disableClickPropagation(wrap);
+        },50);
+        searchResults.style.display='none';
+        searchInput.value = p.Asset||'SRN '+p.SRN;
+      });
+    });
+  }
+  searchResults.style.display = 'block';
+});
+
+searchClear.addEventListener('click', function() {
+  searchInput.value=''; searchClear.style.display='none';
+  searchResults.style.display='none';
+});
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.search-box') && !e.target.closest('.search-results')) {
+    searchResults.style.display='none';
+  }
+});
 </script>
 </body>
 </html>
